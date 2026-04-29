@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Grão & Arte — Cafeteria Artesanal</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- MODAL OVERLAY -->
+<div class="modal-overlay" id="authOverlay" onclick="closeAuth()"></div>
+
+<!-- AUTH MODAL -->
+<div class="modal-box" id="authModal">
+  <button class="modal-close" onclick="closeAuth()">✕</button>
+  <div id="authLogin">
+    <div class="modal-title">Bem-vindo de volta ☕</div>
+    <div class="modal-sub">Entre na sua conta para fazer pedidos e reservas</div>
+    <div class="modal-tabs">
+      <button class="modal-tab active" onclick="switchAuthTab('login')">Entrar</button>
+      <button class="modal-tab" onclick="switchAuthTab('register')">Cadastrar</button>
+    </div>
+    <div class="modal-error" id="loginError"></div>
+    <div class="modal-field">
+      <label>E-mail</label>
+      <input type="email" id="loginEmail" placeholder="seu@email.com" maxlength="100" autocomplete="email"/>
+    </div>
+    <div class="modal-field">
+      <label>Senha</label>
+      <input type="password" id="loginPass" placeholder="••••••••" maxlength="100" autocomplete="current-password"/>
+    </div>
+    <button class="modal-btn" onclick="doLogin()">Entrar na minha conta</button>
+  </div>
+  <div id="authRegister" style="display:none">
+    <div class="modal-title">Criar conta 🌱</div>
+    <div class="modal-sub">Faça parte da família Grão & Arte</div>
+    <div class="modal-tabs">
+      <button class="modal-tab" onclick="switchAuthTab('login')">Entrar</button>
+      <button class="modal-tab active" onclick="switchAuthTab('register')">Cadastrar</button>
+    </div>
+    <div class="modal-error" id="registerError"></div>
+    <div class="modal-success" id="registerSuccess"></div>
+    <div class="modal-field">
+      <label>Nome completo</label>
+      <input type="text" id="regName" placeholder="João Silva" maxlength="60" autocomplete="name"/>
+    </div>
+    <div class="modal-field">
+      <label>E-mail</label>
+      <input type="email" id="regEmail" placeholder="seu@email.com" maxlength="100" autocomplete="email"/>
+    </div>
+    <div class="modal-field">
+      <label>Senha (mínimo 6 caracteres)</label>
+      <input type="password" id="regPass" placeholder="••••••••" maxlength="100" autocomplete="new-password"/>
+    </div>
+    <div class="modal-field">
+      <label>Confirmar senha</label>
+      <input type="password" id="regPass2" placeholder="••••••••" maxlength="100" autocomplete="new-password"/>
+    </div>
+    <button class="modal-btn" onclick="doRegister()">Criar minha conta</button>
+  </div>
+</div>
+
+<!-- CHECKOUT MODAL -->
+<div class="modal-overlay" id="checkoutOverlay" onclick="closeCheckout()"></div>
+<div class="modal-box" id="checkoutModal">
+  <button class="modal-close" onclick="closeCheckout()">✕</button>
+  <div class="modal-title">Finalizar pedido ☕</div>
+  <div class="modal-sub">Confira seu pedido e preencha seus dados para confirmar.</div>
+  <div class="checkout-summary" id="checkoutSummary"></div>
+  <div class="modal-error" id="checkoutError"></div>
+  <div class="modal-field">
+    <label>Nome completo *</label>
+    <input type="text" id="coNome" placeholder="Seu nome completo" maxlength="60" autocomplete="name"/>
+  </div>
+  <div class="modal-field">
+    <label>Telefone (com DDD) *</label>
+    <input type="tel" id="coTel" placeholder="(85) 9 8123-4567" maxlength="20" autocomplete="tel"/>
+  </div>
+  <div class="modal-field">
+    <label>Observações (opcional)</label>
+    <textarea id="coObs" placeholder="Ex: sem açúcar, retirar no balcão..." maxlength="300" style="width:100%;background:#fff;border:1.5px solid var(--latte);color:var(--text);padding:.75rem 1rem;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.88rem;outline:none;min-height:70px;resize:vertical"></textarea>
+  </div>
+  <button class="modal-btn" onclick="confirmarPedido()">Confirmar pedido ✓</button>
+</div>
+
+<!-- CART OVERLAY -->
+<div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
+<div class="cart-drawer" id="cartDrawer">
+  <div class="cart-header">
+    <h3>Meu pedido ☕</h3>
+    <button class="cart-close" onclick="toggleCart()">✕</button>
+  </div>
+  <div class="cart-items" id="cartItems"></div>
+  <div class="cart-footer" id="cartFooter" style="display:none">
+    <div class="cart-total">
+      <span>Total</span>
+      <span class="cart-total-val" id="cartTotal">R$ 0,00</span>
+    </div>
+    <button class="btn-checkout" onclick="finalizarPedido()">Finalizar pedido →</button>
+    <button class="btn-continue" onclick="toggleCart()">← Continuar comprando</button>
+  </div>
+</div>
+
+<nav id="nav">
+  <a href="#" class="logo">Grão <em>&</em> Arte</a>
+  <ul class="nav-links">
+    <li><a href="#menu">Cardápio</a></li>
+    <li><a href="#about">Nossa história</a></li>
+    <li><a href="#reviews">Avaliações</a></li>
+    <li><a href="#contact">Reservas</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="cart-btn" onclick="toggleCart()">
+      🛒 Carrinho
+      <span class="cart-count" id="cartCount">0</span>
+    </button>
+    <div id="navAuthArea">
+      <button class="nav-btn" onclick="openAuth()">Entrar</button>
+    </div>
+  </div>
+</nav>
+
+<section id="hero">
+  <div class="hero-bg-img"></div>
+  <div style="position:relative;z-index:2">
+    <div class="hero-tag">Aberto todos os dias · 7h às 22h</div>
+    <h1>O café que<em>aquece sua alma</em></h1>
+    <p class="hero-desc">Grãos selecionados, torrados artesanalmente e preparados com carinho por baristas apaixonados pelo que fazem. Uma experiência única em cada xícara.</p>
+    <div class="hero-btns">
+      <a href="#menu" class="btn-primary">Ver Cardápio</a>
+      <a href="#about" class="btn-secondary">Nossa história →</a>
+    </div>
+    <div class="hero-stats">
+      <div><div class="stat-n">12+</div><div class="stat-l">Anos de história</div></div>
+      <div><div class="stat-n">40+</div><div class="stat-l">Tipos de café</div></div>
+      <div><div class="stat-n" id="heroRating">4.9★</div><div class="stat-l">Avaliação média</div></div>
+    </div>
+  </div>
+  <div class="hero-right">
+    <div class="hero-img-wrap">
+      <img src="https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=800&q=80" alt="Café artesanal"/>
+    </div>
+    <div class="hero-float">
+      <div class="float-icon">🏆</div>
+      <div>
+        <div class="float-t">Melhor Café do CE</div>
+        <div class="float-s">Prêmio Gastronomia 2024</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="menu">
+  <h2>Nosso Cardápio</h2>
+  <p class="sub">Escolha sua bebida favorita e deixe o dia começar do jeito certo</p>
+  <div class="menu-tabs">
+    <button class="tab-btn active" data-cat="cafes">☕ Cafés</button>
+    <button class="tab-btn" data-cat="frias">🥤 Bebidas Frias</button>
+    <button class="tab-btn" data-cat="paes">🥐 Pães & Doces</button>
+    <button class="tab-btn" data-cat="salgados">🥗 Salgados</button>
+  </div>
+  <div class="menu-grid" id="menuGrid"></div>
+</section>
+
+<section id="about">
+  <div class="about-grid">
+    <div class="about-imgs">
+      <div class="about-img reveal">
+        <img src="https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=600&q=80" alt="Barista preparando café"/>
+      </div>
+      <div class="about-img reveal">
+        <img src="https://images.unsplash.com/photo-1442512595331-e89e73853f31?w=600&q=80" alt="Grãos de café"/>
+      </div>
+    </div>
+    <div class="reveal">
+      <div class="about-tag">Nossa história</div>
+      <h2>Café com alma desde 2012</h2>
+      <p>Nascemos de uma paixão genuína pelo café de qualidade. Começamos como um pequeno quiosque e hoje somos referência em cafeteria artesanal em todo o Ceará.</p>
+      <p>Trabalhamos diretamente com produtores locais, garantindo grãos frescos e rastreáveis do campo até sua xícara. Cada detalhe importa — do torrador à xícara.</p>
+      <div class="about-feats">
+        <div class="feat-item"><span class="feat-icon">🌱</span><div class="feat-text"><strong>Sustentável</strong><span>Grãos de origem controlada</span></div></div>
+        <div class="feat-item"><span class="feat-icon">🏅</span><div class="feat-text"><strong>Premiado</strong><span>4 prêmios nacionais</span></div></div>
+        <div class="feat-item"><span class="feat-icon">👨‍🍳</span><div class="feat-text"><strong>Baristas</strong><span>Todos certificados SCA</span></div></div>
+        <div class="feat-item"><span class="feat-icon">📍</span><div class="feat-text"><strong>Local</strong><span>Parceria com cafeicultores CE</span></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="reviews">
+  <h2>O que nossos clientes dizem</h2>
+  <p class="sub" id="reviewsSubtitle">Mais de 2.400 avaliações 5 estrelas — e contando</p>
+  <div class="reviews-grid" id="reviewsGrid">
+    <!-- reviews rendered by JS -->
+  </div>
+
+  <!-- FORM DE NOVA AVALIAÇÃO -->
+  <div class="review-form-wrap reveal">
+    <h3>Deixe sua avaliação ✍️</h3>
+    <p>Sua opinião é muito importante para nós!</p>
+    <div style="margin-bottom:1.2rem">
+      <div class="review-field" style="margin-bottom:.5rem"><label>Sua nota</label></div>
+      <div class="star-select" id="starSelect">
+        <button class="star-btn" data-v="1" onclick="setStar(1)">★</button>
+        <button class="star-btn" data-v="2" onclick="setStar(2)">★</button>
+        <button class="star-btn" data-v="3" onclick="setStar(3)">★</button>
+        <button class="star-btn" data-v="4" onclick="setStar(4)">★</button>
+        <button class="star-btn" data-v="5" onclick="setStar(5)">★</button>
+      </div>
+    </div>
+    <div class="review-fields">
+      <div class="review-field">
+        <label>Seu nome</label>
+        <input type="text" id="revName" placeholder="Ex: Maria Lima" maxlength="60"/>
+      </div>
+      <div class="review-field">
+        <label>Sobre o quê?</label>
+        <select id="revProduct">
+          <option value="">Experiência geral</option>
+          <option>Espresso Clássico</option>
+          <option>Cappuccino Italiano</option>
+          <option>Cold Brew 24h</option>
+          <option>Croissant de Manteiga</option>
+          <option>Wrap Frango Grelhado</option>
+          <option>Ambiente / Atendimento</option>
+        </select>
+      </div>
+    </div>
+    <div class="review-field" style="margin-bottom:1.2rem">
+      <label>Comentário</label>
+      <textarea id="revComment" placeholder="Conte como foi sua experiência..." maxlength="500"></textarea>
+      <div style="font-size:.7rem;color:var(--muted);margin-top:.4rem">Mínimo 10, máximo 500 caracteres</div>
+    </div>
+    <button class="btn-review" onclick="submitReview()">Publicar avaliação →</button>
+  </div>
+</section>
+
+<section id="contact">
+  <h2>Venha nos visitar</h2>
+  <p class="sub">Estamos no coração de Fortaleza, prontos para te receber com o melhor café da cidade.</p>
+  <div class="contact-wrap">
+    <div class="contact-info">
+      <div class="contact-cards">
+        <div class="cc"><div class="cc-icon">📍</div><div><div class="cc-label">Endereço</div><div class="cc-val">Rua do Café, 42 · Fortaleza, CE</div></div></div>
+        <div class="cc"><div class="cc-icon">🕐</div><div><div class="cc-label">Horário</div><div class="cc-val">Seg–Sex: 7h–22h · Sáb–Dom: 8h–23h</div></div></div>
+        <div class="cc"><div class="cc-icon">📞</div><div><div class="cc-label">Telefone</div><div class="cc-val">(85) 9 9999-9999</div></div></div>
+        <div class="cc"><div class="cc-icon">📸</div><div><div class="cc-label">Instagram</div><div class="cc-val">@graoarte.cafe</div></div></div>
+      </div>
+      <div class="map-img">
+        <img src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=700&q=80" alt="Ambiente da cafeteria" style="border-radius:12px"/>
+      </div>
+    </div>
+    <div class="reserva-form" id="reservaForm">
+      <h3>Reservar uma mesa</h3>
+      <p>Garanta seu cantinho favorito com antecedência</p>
+      <div class="form-row">
+        <div class="field">
+          <label>Nome *</label>
+          <input type="text" id="resNome" placeholder="Seu nome" maxlength="60"/>
+          <div class="field-error" id="err-resNome">Informe seu nome</div>
+        </div>
+        <div class="field">
+          <label>Telefone *</label>
+          <input type="tel" id="resTel" placeholder="(85) 9 8123-4567" maxlength="20"/>
+          <div class="field-error" id="err-resTel">Informe o telefone</div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label>Data *</label>
+          <input type="date" id="resData"/>
+          <div class="field-error" id="err-resData">Selecione uma data válida (de hoje até 6 meses)</div>
+        </div>
+        <div class="field">
+          <label>Horário *</label>
+          <select id="resHora">
+            <option value="">— Selecione —</option>
+            <option>07:00</option><option>08:00</option><option>09:00</option>
+            <option>10:00</option><option>11:00</option><option>12:00</option>
+            <option>13:00</option><option>14:00</option><option>15:00</option>
+            <option>16:00</option><option>17:00</option><option>18:00</option>
+            <option>19:00</option><option>20:00</option><option>21:00</option>
+          </select>
+          <div class="field-error" id="err-resHora">Selecione um horário</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Número de pessoas *</label>
+        <select id="resPessoas">
+          <option value="">— Selecione —</option>
+          <option value="1">1 pessoa</option>
+          <option value="2">2 pessoas</option>
+          <option value="3">3 pessoas</option>
+          <option value="4">4 pessoas</option>
+          <option value="5">5 pessoas</option>
+          <option value="6">6+ pessoas</option>
+        </select>
+        <div class="field-error" id="err-resPessoas">Informe o número de pessoas</div>
+      </div>
+      <div class="field">
+        <label>Observações (opcional)</label>
+        <textarea id="resObs" placeholder="Algum pedido especial? Ex: aniversário, cadeirinha para bebê..." maxlength="300"></textarea>
+      </div>
+      <button class="btn-reservar" onclick="reservar()">Confirmar reserva ✓</button>
+      <div class="form-success" id="formSuccess">
+        <div class="form-success-icon">✅</div>
+        <h4>Reserva confirmada!</h4>
+        <p id="successMsg">Até breve! Te esperamos com muito café.</p>
+        <button class="btn-reservar" style="margin-top:1.5rem;background:rgba(255,255,255,.15);color:var(--cream)" onclick="resetReserva()">Fazer nova reserva</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <a href="#" class="logo">Grão <em style="color:var(--caramel);font-style:italic">&</em> Arte</a>
+  <p>© 2025 Grão & Arte Cafeteria · Todos os direitos reservados</p>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
